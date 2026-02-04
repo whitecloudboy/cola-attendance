@@ -1,0 +1,37 @@
+# cola-attendance 考勤与排班 - 本地/Demo 一键启动（后端 + MySQL）
+# 首次运行需在 MySQL 中执行建表与初始化：docs/attendance-db-schema.sql、attendance-backend/src/main/resources/sql/init-admin.sql
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: attendance
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./attendance-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_SECRET: ${JWT_SECRET:-please-change-this-in-production-min-32-chars}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/attendance?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

@@ -38,10 +38,10 @@
 ## 第三步：增强与收尾（开源发布前）
 
 ### 代码与文档
-- [ ] 清理敏感配置、密钥占位符说明
-- [ ] README 补充：部署说明、环境变量、Docker 示例
-- [ ] LICENSE 文件确认（如 MIT、Apache 2.0）
-- [ ] CONTRIBUTING.md（可选，如接受贡献）
+- [x] 清理敏感配置、密钥占位符说明
+- [x] README 补充：部署说明、环境变量、Docker 示例
+- [x] LICENSE 文件确认（如 MIT、Apache 2.0）
+- [x] CONTRIBUTING.md（可选，如接受贡献）
 
 ### 功能可选增强
 - [ ] 规则引擎版本化或灰度

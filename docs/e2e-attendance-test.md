@@ -143,5 +143,5 @@ python scripts/verify_result.py --date 2025-02-05 --samples 5 --output logs/veri
 
 ## 7. 相关文档
 
-- [chonggou2.md](chonggou2.md) §7：E2E 归档与任务清单
 - [attendance-db-schema.sql](attendance-db-schema.sql)：数据库表结构
+- 项目任务与阶段见仓库根目录 `TASKS.md`
