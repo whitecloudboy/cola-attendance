@@ -55,6 +55,7 @@ export default {
     startDate: 'Start Date',
     endDate: 'End Date',
     generateEmpty: 'Generate Empty',
+    settle: 'Settle',
     statusNormal: 'Normal',
     statusLate: 'Late',
     statusNoCard: 'No Card',
@@ -70,6 +71,7 @@ export default {
     importExcel: 'Import Excel',
     downloadTemplate: 'Download template',
     importTip: 'Header: Name or ID, Punch time, Device code (optional). .xlsx only.',
+    simulatePunch: 'Simulate Punch',
     startDate: 'Start date',
     endDate: 'End date'
   },

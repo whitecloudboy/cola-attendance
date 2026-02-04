@@ -11,3 +11,8 @@ export function getResultList(params) {
 export function generateEmptyResult(date) {
   return request.post('/attendance/result/generate-empty', null, { params: { date } })
 }
+
+/** 考勤结算：触发指定日期的日终补录（未打卡等状态更新） */
+export function triggerEndTask(date) {
+  return request.post('/attendance/result/trigger-end-task', null, { params: { date } })
+}

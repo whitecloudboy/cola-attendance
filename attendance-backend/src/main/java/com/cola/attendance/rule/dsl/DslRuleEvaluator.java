@@ -58,14 +58,26 @@ public class DslRuleEvaluator implements IEventEvaluator {
         if (ruleSet != null && outcome != null && StringUtils.hasText(ruleSet.getVersionNo())) {
             outcome.setRuleVersion(ruleSet.getVersionNo());
         }
-        if (eventType.contains("start") || "punch".equals(eventType)) {
+        if (eventType.contains("start") || "punch".equals(eventType) || "end-check".equals(eventType)) {
             List<AttendanceDslProperties.DslRule> rules = ruleSet != null ? ruleSet.getStartRules() : dslProperties.getStartRules();
             applyRules(context, outcome, rules, true);
         }
-        if (eventType.contains("end") || "punch".equals(eventType)) {
+        if (eventType.contains("end") || "punch".equals(eventType) || "end-check".equals(eventType)) {
             outcome.setStop(false);
             List<AttendanceDslProperties.DslRule> rules = ruleSet != null ? ruleSet.getEndRules() : dslProperties.getEndRules();
             applyRules(context, outcome, rules, false);
+        }
+        // 无论规则是否匹配，有打卡记录时始终填充真实打卡时间（确保 checkInTime/checkOutTime 不为空）
+        List<AttendanceRecordDTO> records = context.getEvent() != null ? context.getEvent().getAttendanceRecords() : null;
+        if (records != null && !records.isEmpty()) {
+            if (outcome.getCheckStartTime() == null) {
+                LocalDateTime ci = resolveCheckIn(context);
+                if (ci != null) outcome.setCheckStartTime(ci.toLocalTime());
+            }
+            if (outcome.getCheckEndTime() == null) {
+                LocalDateTime co = resolveCheckOut(context);
+                if (co != null) outcome.setCheckEndTime(co.toLocalTime());
+            }
         }
     }
 

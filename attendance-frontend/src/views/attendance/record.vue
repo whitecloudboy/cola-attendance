@@ -3,7 +3,8 @@
     <el-card>
       <template #header>
         <span>{{ t('record.title') }}</span>
-        <el-button type="primary" style="float:right" @click="showImport = true">{{ t('record.importExcel') }}</el-button>
+        <el-button type="primary" style="float:right; margin-left:8px" @click="showImport = true">{{ t('record.importExcel') }}</el-button>
+        <el-button style="float:right" :loading="simulateLoading" @click="doSimulatePunch">{{ t('record.simulatePunch') }}</el-button>
       </template>
       <el-form :inline="true" class="query-form">
         <el-form-item :label="t('record.startDate')">
@@ -72,7 +73,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { getDeviceList } from '../../api/device'
-import { getRecordPage, importRecordExcel, downloadRecordTemplate } from '../../api/record'
+import { getRecordPage, importRecordExcel, downloadRecordTemplate, simulatePunch } from '../../api/record'
+import { ElMessageBox } from 'element-plus'
 
 const { t } = useI18n()
 const tableData = ref([])
@@ -82,6 +84,7 @@ const deviceList = ref([])
 const showImport = ref(false)
 const importLoading = ref(false)
 const downloadLoading = ref(false)
+const simulateLoading = ref(false)
 const uploadRef = ref(null)
 let selectedFile = null
 
@@ -101,14 +104,17 @@ async function loadDeviceList() {
 }
 
 async function load() {
-  const res = await getRecordPage({
+  const params = {
     current: page.current,
     size: page.size,
-    deviceId: query.deviceId ?? undefined,
-    startDate: query.startDate || undefined,
-    endDate: query.endDate || undefined,
+    startDate: query.startDate?.trim() || undefined,
+    endDate: query.endDate?.trim() || undefined,
     userKeyword: query.userName?.trim() || undefined
-  })
+  }
+  if (query.deviceId != null && query.deviceId !== '') {
+    params.deviceId = query.deviceId
+  }
+  const res = await getRecordPage(params)
   tableData.value = res.records || []
   page.total = res.total || 0
 }
@@ -161,6 +167,28 @@ async function doImport() {
     // message by interceptor
   } finally {
     importLoading.value = false
+  }
+}
+
+async function doSimulatePunch() {
+  try {
+    await ElMessageBox.confirm(
+      '将为当天按排班模拟生成约 10 条打卡记录（含正常、迟到、早退等），并触发考勤计算。是否继续？',
+      '模拟打卡',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'info' }
+    )
+  } catch {
+    return
+  }
+  simulateLoading.value = true
+  try {
+    const count = await simulatePunch()
+    ElMessage.success('已生成 ' + count + ' 条模拟打卡记录')
+    load()
+  } catch (e) {
+    // message by interceptor
+  } finally {
+    simulateLoading.value = false
   }
 }
 

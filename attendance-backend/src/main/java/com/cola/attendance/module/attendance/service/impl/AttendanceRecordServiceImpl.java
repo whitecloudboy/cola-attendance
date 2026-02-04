@@ -6,9 +6,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cola.attendance.module.attendance.dao.AttendanceDeviceDao;
 import com.cola.attendance.module.attendance.dao.AttendanceRecordDao;
 import com.cola.attendance.module.attendance.dto.AttendanceRecordDTO;
+import com.cola.attendance.module.attendance.dto.DeviceCallbackDTO;
+import com.cola.attendance.module.attendance.dto.PunchCreateDTO;
 import com.cola.attendance.module.attendance.entity.AttendanceDeviceEntity;
 import com.cola.attendance.module.attendance.entity.AttendanceRecordEntity;
 import com.cola.attendance.module.attendance.service.AttendanceRecordService;
+import com.cola.attendance.module.attendance.service.AttendanceResultService;
+import com.cola.attendance.module.attendance.service.AttendanceTaskService;
+import com.cola.attendance.module.schedule.dto.DutyScheduleDTO;
+import com.cola.attendance.module.schedule.entity.DutyShiftEntity;
+import com.cola.attendance.module.schedule.service.DutyScheduleService;
+import com.cola.attendance.module.schedule.service.DutyShiftService;
 import com.cola.attendance.module.system.dao.SysUserDao;
 import com.cola.attendance.module.system.entity.SysUserEntity;
 import com.cola.attendance.module.system.service.SysDeptService;
@@ -16,6 +24,7 @@ import com.cola.attendance.task.PunchSavedEvent;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +32,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.*;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,16 +42,27 @@ import java.util.stream.Collectors;
 @Service
 public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordDao, AttendanceRecordEntity> implements AttendanceRecordService {
 
+    /** 导入时未填设备编码时默认关联的考勤设备 ID（海康考勤001） */
+    private static final long DEFAULT_DEVICE_ID = 1L;
+
     private final AttendanceDeviceDao attendanceDeviceDao;
     private final SysUserDao sysUserDao;
     private final SysDeptService sysDeptService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AttendanceResultService attendanceResultService;
+    private final AttendanceTaskService attendanceTaskService;
+    private final DutyScheduleService dutyScheduleService;
+    private final DutyShiftService dutyShiftService;
 
-    public AttendanceRecordServiceImpl(AttendanceDeviceDao attendanceDeviceDao, SysUserDao sysUserDao, SysDeptService sysDeptService, ApplicationEventPublisher eventPublisher) {
+    public AttendanceRecordServiceImpl(AttendanceDeviceDao attendanceDeviceDao, SysUserDao sysUserDao, SysDeptService sysDeptService, ApplicationEventPublisher eventPublisher, AttendanceResultService attendanceResultService, @Lazy AttendanceTaskService attendanceTaskService, DutyScheduleService dutyScheduleService, DutyShiftService dutyShiftService) {
         this.attendanceDeviceDao = attendanceDeviceDao;
         this.sysUserDao = sysUserDao;
         this.sysDeptService = sysDeptService;
         this.eventPublisher = eventPublisher;
+        this.attendanceResultService = attendanceResultService;
+        this.attendanceTaskService = attendanceTaskService;
+        this.dutyScheduleService = dutyScheduleService;
+        this.dutyShiftService = dutyShiftService;
     }
 
     @Override
@@ -85,6 +107,7 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordDao
             throw new IllegalArgumentException("仅支持 .xlsx 或 .xls 文件");
         }
         int count = 0;
+        Set<LocalDate> importedDates = new LinkedHashSet<>();
         try (InputStream is = file.getInputStream(); Workbook wb = new XSSFWorkbook(is)) {
             Sheet sheet = wb.getSheetAt(0);
             if (sheet == null) return 0;
@@ -100,7 +123,7 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordDao
                 if (user == null) continue;
                 LocalDateTime eventTime = parseEventTime(row.getCell(1), timeStr.trim());
                 if (eventTime == null) continue;
-                Long deviceId = null;
+                Long deviceId = DEFAULT_DEVICE_ID;
                 if (deviceCodeStr != null && !deviceCodeStr.isBlank()) {
                     AttendanceDeviceEntity dev = attendanceDeviceDao.selectOne(
                             new LambdaQueryWrapper<AttendanceDeviceEntity>().eq(AttendanceDeviceEntity::getDeviceCode, deviceCodeStr.trim()));
@@ -113,8 +136,13 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordDao
                 rec.setEventTime(eventTime);
                 rec.setDeviceId(deviceId);
                 save(rec);
+                importedDates.add(eventTime.toLocalDate());
                 eventPublisher.publishEvent(new PunchSavedEvent(this, user.getId(), eventTime.toLocalDate()));
                 count++;
+            }
+            for (LocalDate d : importedDates) {
+                attendanceResultService.generateEmptyForDate(d);
+                attendanceTaskService.runEndOfDaySupplement(d);
             }
         } catch (Exception e) {
             if (e instanceof IllegalArgumentException) throw (IllegalArgumentException) e;
@@ -176,6 +204,126 @@ public class AttendanceRecordServiceImpl extends ServiceImpl<AttendanceRecordDao
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Override
+    public AttendanceRecordEntity saveFromDeviceCallback(DeviceCallbackDTO dto) {
+        if (dto == null || dto.getEmployeeNo() == null || dto.getEmployeeNo().isBlank()
+                || dto.getEventTime() == null || dto.getEventTime().isBlank()) {
+            return null;
+        }
+        SysUserEntity user = resolveUser(dto.getEmployeeNo().trim());
+        if (user == null) return null;
+        LocalDateTime eventTime = parseEventTimeFromString(dto.getEventTime().trim());
+        if (eventTime == null) return null;
+        Long deviceId = resolveDeviceId(dto.getDeviceCode(), dto.getDeviceIp());
+        AttendanceRecordEntity rec = new AttendanceRecordEntity();
+        rec.setUserId(user.getId());
+        rec.setUserName(user.getDisplayName());
+        rec.setDeptId(user.getDeptId());
+        rec.setEventTime(eventTime);
+        rec.setDeviceId(deviceId);
+        rec.setEventType(dto.getEventType());
+        rec.setTemperature(dto.getTemperature());
+        rec.setRemark(dto.getRemark());
+        save(rec);
+        eventPublisher.publishEvent(new PunchSavedEvent(this, user.getId(), eventTime.toLocalDate()));
+        return rec;
+    }
+
+    @Override
+    public AttendanceRecordEntity saveOne(PunchCreateDTO dto) {
+        if (dto == null || dto.getUserId() == null || dto.getEventTime() == null || dto.getEventTime().isBlank()) {
+            throw new IllegalArgumentException("userId 与 eventTime 必填");
+        }
+        SysUserEntity user = sysUserDao.selectById(dto.getUserId());
+        if (user == null) throw new IllegalArgumentException("用户不存在");
+        LocalDateTime eventTime = parseEventTimeFromString(dto.getEventTime().trim());
+        if (eventTime == null) throw new IllegalArgumentException("eventTime 格式错误，应为 yyyy-MM-dd HH:mm:ss");
+        AttendanceRecordEntity rec = new AttendanceRecordEntity();
+        rec.setUserId(user.getId());
+        rec.setUserName(user.getDisplayName());
+        rec.setDeptId(user.getDeptId());
+        rec.setEventTime(eventTime);
+        rec.setDeviceId(dto.getDeviceId());
+        rec.setEventType(dto.getEventType());
+        rec.setRemark(dto.getRemark());
+        save(rec);
+        eventPublisher.publishEvent(new PunchSavedEvent(this, user.getId(), eventTime.toLocalDate()));
+        return rec;
+    }
+
+    @Override
+    public int simulatePunchRecords(LocalDate date) {
+        if (date == null) return 0;
+        List<DutyScheduleDTO> schedules = dutyScheduleService.listByDateRange(date, date, null);
+        if (schedules == null || schedules.isEmpty()) return 0;
+        // 约 10 条：取前 5 个排班，每人上下班 2 条；第 1 正常、第 2 迟到、第 3 早退、第 4 严重迟到、第 5 正常
+        int[][] offsets = {{0, 0}, {30, 0}, {0, -30}, {60, 0}, {0, 0}};
+        int count = 0;
+        for (int i = 0; i < Math.min(5, schedules.size()); i++) {
+            DutyScheduleDTO s = schedules.get(i);
+            DutyShiftEntity shift = s.getShiftId() != null ? dutyShiftService.getById(s.getShiftId()) : null;
+            if (shift == null) continue;
+            LocalTime st = shift.getStartTime() != null ? shift.getStartTime() : LocalTime.of(8, 30);
+            LocalTime et = shift.getEndTime() != null ? shift.getEndTime() : LocalTime.of(17, 30);
+            boolean crossDay = shift.getIsCrossDay() != null && shift.getIsCrossDay() == 1;
+            int startOffset = i < offsets.length ? offsets[i][0] : 0;
+            int endOffset = i < offsets.length ? offsets[i][1] : 0;
+            LocalDateTime startDt = date.atTime(st).plusMinutes(startOffset);
+            LocalDate endDate = crossDay ? date.plusDays(1) : date;
+            LocalDateTime endDt = endDate.atTime(et).plusMinutes(endOffset);
+            SysUserEntity user = sysUserDao.selectById(s.getUserId());
+            if (user == null) continue;
+            AttendanceRecordEntity inRec = new AttendanceRecordEntity();
+            inRec.setUserId(user.getId());
+            inRec.setUserName(user.getDisplayName());
+            inRec.setDeptId(user.getDeptId());
+            inRec.setEventTime(startDt);
+            inRec.setDeviceId(DEFAULT_DEVICE_ID);
+            save(inRec);
+            eventPublisher.publishEvent(new PunchSavedEvent(this, user.getId(), date));
+            count++;
+            AttendanceRecordEntity outRec = new AttendanceRecordEntity();
+            outRec.setUserId(user.getId());
+            outRec.setUserName(user.getDisplayName());
+            outRec.setDeptId(user.getDeptId());
+            outRec.setEventTime(endDt);
+            outRec.setDeviceId(DEFAULT_DEVICE_ID);
+            save(outRec);
+            eventPublisher.publishEvent(new PunchSavedEvent(this, user.getId(), date));
+            count++;
+        }
+        if (count > 0) {
+            attendanceResultService.generateEmptyForDate(date);
+            attendanceTaskService.runEndOfDaySupplement(date);
+        }
+        return count;
+    }
+
+    private LocalDateTime parseEventTimeFromString(String timeStr) {
+        try {
+            if (timeStr.length() <= 10) {
+                return LocalDate.parse(timeStr).atStartOfDay();
+            }
+            return LocalDateTime.parse(timeStr.replace(" ", "T"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Long resolveDeviceId(String deviceCode, String deviceIp) {
+        if (deviceCode != null && !deviceCode.isBlank()) {
+            AttendanceDeviceEntity dev = attendanceDeviceDao.selectOne(
+                    new LambdaQueryWrapper<AttendanceDeviceEntity>().eq(AttendanceDeviceEntity::getDeviceCode, deviceCode.trim()));
+            if (dev != null) return dev.getId();
+        }
+        if (deviceIp != null && !deviceIp.isBlank()) {
+            AttendanceDeviceEntity dev = attendanceDeviceDao.selectOne(
+                    new LambdaQueryWrapper<AttendanceDeviceEntity>().eq(AttendanceDeviceEntity::getIpAddress, deviceIp.trim()));
+            if (dev != null) return dev.getId();
+        }
+        return null;
     }
 
     private SysUserEntity resolveUser(String userStr) {

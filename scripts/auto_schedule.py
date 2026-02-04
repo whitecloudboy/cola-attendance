@@ -50,7 +50,7 @@ def list_users(token: str, timeout: int) -> list:
 
 def list_shifts(token: str, timeout: int) -> list:
     """获取班次列表。"""
-    code, resp = api_get("/schedule/shift/list", {"deptId": None}, token, timeout)
+    code, resp = api_get("/schedule/shift/list", {}, token, timeout)
     if code != 200 or resp.get("code") != 0:
         return []
     return resp.get("data") or []

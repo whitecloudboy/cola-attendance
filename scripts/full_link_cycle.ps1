@@ -11,8 +11,8 @@ Param(
 $ErrorActionPreference = "Stop"
 chcp 65001 | Out-Null
 
-$repo = Split-Path $MyInvocation.MyCommand.Path -Parent
-$scriptDir = Join-Path $repo "scripts"
+$scriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
+$repo = Split-Path $scriptDir -Parent
 $reportPath = if ([System.IO.Path]::IsPathRooted($ReportDir)) { $ReportDir } else { Join-Path $repo $ReportDir }
 if (-not (Test-Path $reportPath)) { New-Item -ItemType Directory -Path $reportPath | Out-Null }
 

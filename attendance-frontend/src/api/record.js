@@ -16,3 +16,8 @@ export function importRecordExcel(file) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+/** 模拟打卡：生成约 10 条当天打卡记录（含正常/迟到/早退）并触发考勤计算 */
+export function simulatePunch(date) {
+  return request.post('/attendance/record/simulate', null, { params: date ? { date } : {} })
+}

@@ -55,6 +55,7 @@ export default {
     startDate: '开始日期',
     endDate: '结束日期',
     generateEmpty: '生成当日空考勤',
+    settle: '考勤结算',
     statusNormal: '正常',
     statusLate: '迟到',
     statusNoCard: '缺卡',
@@ -70,6 +71,7 @@ export default {
     importExcel: '导入Excel',
     downloadTemplate: '下载模板',
     importTip: '表头：姓名或工号、打卡时间、设备编码(可选)。支持 .xlsx',
+    simulatePunch: '模拟打卡',
     startDate: '开始日期',
     endDate: '结束日期'
   },

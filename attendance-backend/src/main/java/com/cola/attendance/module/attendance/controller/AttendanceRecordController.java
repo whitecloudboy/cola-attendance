@@ -3,6 +3,8 @@ package com.cola.attendance.module.attendance.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cola.attendance.common.result.Result;
 import com.cola.attendance.module.attendance.dto.AttendanceRecordDTO;
+import com.cola.attendance.module.attendance.dto.DeviceCallbackDTO;
+import com.cola.attendance.module.attendance.dto.PunchCreateDTO;
 import com.cola.attendance.module.attendance.entity.AttendanceRecordEntity;
 import com.cola.attendance.module.attendance.service.AttendanceRecordService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 @Tag(name = "打卡记录")
 @RestController
@@ -32,13 +35,28 @@ public class AttendanceRecordController {
     public Result<Page<AttendanceRecordDTO>> page(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "20") long size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) Long deviceId,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String deviceId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String userKeyword) {
+        Long userIdLong = parseLongOrNull(userId);
+        Long deviceIdLong = parseLongOrNull(deviceId);
         return Result.ok(attendanceRecordService.pageDto(
-                Page.of(current, size), userId, deviceId, startDate, endDate, userKeyword));
+                Page.of(current, size), userIdLong, deviceIdLong, blankToNull(startDate), blankToNull(endDate), blankToNull(userKeyword)));
+    }
+
+    private static Long parseLongOrNull(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            return Long.valueOf(s.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static String blankToNull(String s) {
+        return (s != null && !s.isBlank()) ? s.trim() : null;
     }
 
     @Operation(summary = "下载打卡记录导入模板")
@@ -56,6 +74,43 @@ public class AttendanceRecordController {
     @PostMapping("/import")
     public Result<Integer> importExcel(@RequestParam("file") MultipartFile file) {
         int count = attendanceRecordService.importExcel(file);
+        return Result.ok(count);
+    }
+
+    @Operation(summary = "设备回调上报打卡（兼容门禁/刷脸设备，无需登录）")
+    @PostMapping("/callback")
+    public Result<AttendanceRecordDTO> deviceCallback(@RequestBody DeviceCallbackDTO dto) {
+        AttendanceRecordEntity entity = attendanceRecordService.saveFromDeviceCallback(dto);
+        if (entity == null) {
+            return Result.fail("人员或时间解析失败，请检查 employeeNo、eventTime");
+        }
+        AttendanceRecordDTO result = new AttendanceRecordDTO();
+        result.setId(entity.getId());
+        result.setUserId(entity.getUserId());
+        result.setUserName(entity.getUserName());
+        result.setEventTime(entity.getEventTime());
+        result.setDeviceId(entity.getDeviceId());
+        return Result.ok(result);
+    }
+
+    @Operation(summary = "单条打卡创建（模拟打卡/补录，需登录）")
+    @PostMapping
+    public Result<AttendanceRecordDTO> create(@RequestBody PunchCreateDTO dto) {
+        AttendanceRecordEntity entity = attendanceRecordService.saveOne(dto);
+        AttendanceRecordDTO result = new AttendanceRecordDTO();
+        result.setId(entity.getId());
+        result.setUserId(entity.getUserId());
+        result.setUserName(entity.getUserName());
+        result.setEventTime(entity.getEventTime());
+        result.setDeviceId(entity.getDeviceId());
+        return Result.ok(result);
+    }
+
+    @Operation(summary = "模拟打卡：生成当天约 10 条打卡记录（含正常/迟到/早退）并触发考勤计算")
+    @PostMapping("/simulate")
+    public Result<Integer> simulate(@RequestParam(required = false) String date) {
+        LocalDate d = (date != null && !date.isBlank()) ? LocalDate.parse(date.trim()) : LocalDate.now();
+        int count = attendanceRecordService.simulatePunchRecords(d);
         return Result.ok(count);
     }
 
