@@ -25,12 +25,12 @@ An open-source attendance and duty scheduling system for real-world shift scenar
 
 ```text
 cola-attendance/
-鈹溾攢 attendance-backend/      # Java backend
-鈹溾攢 attendance-frontend/     # Vue frontend
-鈹溾攢 docs/                    # DB scripts, design docs, E2E docs
-鈹溾攢 scripts/                 # E2E automation (Python + PowerShell)
-鈹溾攢 docker-compose.yml       # Local/demo orchestration
-鈹斺攢 TASKS.md                 # Project task list and progress
+|-- attendance-backend/      # Java backend
+|-- attendance-frontend/     # Vue frontend
+|-- docs/                    # DB scripts, design docs, E2E docs
+|-- scripts/                 # E2E automation (Python + PowerShell)
+|-- docker-compose.yml       # Local/demo orchestration
+`-- TASKS.md                 # Project task list and progress
 ```
 
 ## 3. Core Features
