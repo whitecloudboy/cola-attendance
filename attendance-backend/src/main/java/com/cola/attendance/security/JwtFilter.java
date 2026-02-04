@@ -21,6 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
+/**
+ * JWT 认证过滤器。
+ * 从请求头 {@link Constant#TOKEN_HEADER} 读取 token，解析后设置 {@link LoginUser} 到 SecurityContext，
+ * 供后续接口权限校验使用；解析失败则不放行身份，不中断请求链。
+ */
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 

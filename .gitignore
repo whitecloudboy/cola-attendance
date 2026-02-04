@@ -1,0 +1,18 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.idea
+*.iml
+*.ipr
+*.iws
+.vscode/
+.DS_Store
+*.log
+**/application-local.yml
+
+# 前端
+node_modules/
+**/dist/
+
+# 脚本与日志
+logs/
+**/__pycache__/

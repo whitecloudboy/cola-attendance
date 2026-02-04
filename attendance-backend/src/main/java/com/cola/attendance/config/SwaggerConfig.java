@@ -5,6 +5,10 @@ import io.swagger.v3.oas.models.info.Info;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Swagger/OpenAPI 文档配置。
+ * 提供「考勤与排班 API」标题与版本说明，供 /swagger-ui 访问。
+ */
 @Configuration
 public class SwaggerConfig {
 

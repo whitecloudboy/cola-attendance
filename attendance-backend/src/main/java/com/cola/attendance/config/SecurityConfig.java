@@ -12,6 +12,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Spring Security 配置。
+ * 无状态 JWT 认证：登录、设备回调、Swagger 放行，其余请求需通过 JwtFilter 校验 token。
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -23,11 +27,13 @@ public class SecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
+    /** 密码加密器，用于登录密码校验与用户密码存储。 */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /** 安全过滤链：关闭 CSRF、无 Session、白名单放行、其余走 JWT 过滤。 */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

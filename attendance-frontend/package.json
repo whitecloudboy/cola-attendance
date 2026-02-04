@@ -1,0 +1,24 @@
+{
+  "name": "attendance-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.9",
+    "element-plus": "^2.10.7",
+    "pinia": "^2.2.6",
+    "vue": "^3.5.13",
+    "vue-i18n": "^11.2.8",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^5.4.19"
+  }
+}
