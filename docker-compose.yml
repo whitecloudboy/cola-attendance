@@ -1,5 +1,5 @@
 # cola-attendance 考勤与排班 - 本地/Demo 一键启动（后端 + MySQL）
-# 首次运行需在 MySQL 中执行建表与初始化：docs/attendance-db-schema.sql、attendance-backend/src/main/resources/sql/init-admin.sql
+# MySQL 首次初始化会自动执行 /docker-entrypoint-initdb.d 下的 SQL（仅在 mysql_data 为空时执行）
 
 services:
   mysql:
@@ -8,9 +8,12 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: attendance
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docs/attendance-db-schema.sql:/docker-entrypoint-initdb.d/10-attendance-db-schema.sql:ro
+      - ./docs/attendance-db-schema-alter.sql:/docker-entrypoint-initdb.d/20-attendance-db-schema-alter.sql:ro
+      - ./attendance-backend/src/main/resources/sql/init-admin.sql:/docker-entrypoint-initdb.d/30-init-admin.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -22,7 +25,7 @@ services:
       context: ./attendance-backend
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       JWT_SECRET: ${JWT_SECRET:-please-change-this-in-production-min-32-chars}
