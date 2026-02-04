@@ -15,6 +15,41 @@ An open-source attendance and duty scheduling system for real-world shift scenar
 - Rule engine (DSL/SpEL)
 - Scheduled jobs and E2E automation scripts
 
+## 0. First Things First
+
+### What this repository is
+
+- A **runnable full-stack system** (`attendance-backend` + `attendance-frontend`)
+- Not just a docs/demo repo: docs and scripts are support materials for the running product
+- The rule engine is an integrated production module, used in real attendance result calculation
+
+### What problem it solves
+
+- Replace manual attendance tracking in small and medium-sized organizations
+- Standardize scheduling, punch-in/out ingestion, attendance result generation, and rule-based judgment
+- Provide an extensible base for organizations that need customizable attendance rules
+
+### 30-second understanding
+
+- If you only run backend + database, you can already use the core APIs and Swagger
+- If you also run frontend, you get an end-to-end usable admin UI
+- If you run scripts in `scripts/`, you can validate the full attendance flow automatically
+
+### Fastest way to run
+
+```bash
+# 1) start backend + mysql
+docker compose up -d
+
+# 2) manually initialize schema and admin (one-time)
+# docs/attendance-db-schema.sql
+# docs/attendance-db-schema-alter.sql
+# attendance-backend/src/main/resources/sql/init-admin.sql
+
+# 3) open swagger
+# http://localhost:8080/swagger-ui.html
+```
+
 ## 1. Tech Stack
 
 - Backend: `Spring Boot 3`, `JDK 21`, `MyBatis-Plus`, `Spring Security`, `JWT`

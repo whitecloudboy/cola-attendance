@@ -15,6 +15,41 @@
 - 规则引擎（DSL/SpEL）
 - 定时任务与 E2E 全链路脚本
 
+## 0. 第一性说明（先看这个）
+
+### 这个仓库到底是什么
+
+- 这是一个**可运行的前后端系统**（`attendance-backend` + `attendance-frontend`）
+- 不是“纯设计文档仓库”：`docs/` 和 `scripts/` 是服务于系统落地与验证的配套
+- 规则引擎不是概念演示，而是已接入考勤结果计算的核心模块
+
+### 解决什么问题
+
+- 面向中小单位，替代人工考勤统计与排班管理
+- 把排班、打卡采集、考勤结果生成、规则判定串成一条完整链路
+- 支持规则可配置，便于不同单位按制度调整
+
+### 30 秒看懂
+
+- 只启动后端 + 数据库，就能通过 API/Swagger 使用核心能力
+- 启动前端后，就是完整可用的管理系统
+- 运行 `scripts/` 能自动验证全链路考勤流程
+
+### 最快跑起来
+
+```bash
+# 1）启动 backend + mysql
+docker compose up -d
+
+# 2）手工初始化数据库（首次一次）
+# docs/attendance-db-schema.sql
+# docs/attendance-db-schema-alter.sql
+# attendance-backend/src/main/resources/sql/init-admin.sql
+
+# 3）打开 Swagger
+# http://localhost:8080/swagger-ui.html
+```
+
 ## 1. 技术栈
 
 - 后端：`Spring Boot 3`、`JDK 21`、`MyBatis-Plus`、`Spring Security`、`JWT`
