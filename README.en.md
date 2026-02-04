@@ -15,6 +15,9 @@ An open-source attendance and duty scheduling system for real-world shift scenar
 - Rule engine (DSL/SpEL)
 - Scheduled jobs and E2E automation scripts
 
+This project is refactored from a production legacy attendance system.  
+The roadmap also includes AI assistant, duty bulletin/public board, and data analytics sub-systems.
+
 ## 0. First Things First
 
 ### What this repository is
