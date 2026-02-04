@@ -21,7 +21,8 @@ export default {
       title: '考勤',
       device: '考勤设备',
       record: '打卡记录',
-      result: '考勤结果'
+      result: '考勤结果',
+      ruleDsl: '规则配置'
     }
   },
   device: {
@@ -61,6 +62,34 @@ export default {
     statusNoCard: '缺卡',
     statusAbnormal: '异常',
     statusUnknown: '-'
+  },
+  ruleDsl: {
+    title: '考勤规则配置',
+    enabled: '启用规则引擎',
+    enabledTip: '关闭后考勤结果将不再按规则自动更新',
+    startRules: '上班规则',
+    endRules: '下班规则',
+    ruleName: '规则名称',
+    whenExpr: '条件表达式',
+    startStatus: '上班状态',
+    endStatus: '下班状态',
+    stop: '匹配后停止',
+    usageTitle: '使用说明',
+    usageIntro: '规则用于根据打卡情况自动判断上班/下班状态（正常、迟到、缺卡、早退等）。规则按从上到下顺序匹配，命中第一条且勾选「匹配后停止」则不再继续。',
+    usageVars: '可用变量：',
+    usageVarBan: '#ban 当前排班，可访问 #ban.deptName 部门名、#ban.realName 姓名',
+    usageVarRecords: '#records 当天打卡记录列表，#records.isEmpty() 表示没打卡',
+    usageFuncs: '可用函数（直接写函数名即可）：',
+    usageFuncLate: 'minutesLate() → 迟到分钟数（0=准时，负数=提前，正数=迟到）',
+    usageFuncEarly: 'minutesEarlyLeave() → 早退分钟数（≤0=正常，正数=早退多少分钟）',
+    usageFuncDept: 'isDept(1) → 是否属于部门ID 1；inDept([1,2], true) → 是否属于部门1或2（true 含子部门）',
+    usageFuncPerson: 'isPerson(10) → 是否为用户ID 10',
+    usageExamples: '常用写法示例：',
+    usageEx1: '有打卡且迟到≤5分钟算正常：#records != null and !#records.isEmpty() and minutesLate() <= 5',
+    usageEx2: '有打卡且迟到>5分钟算迟到：#records != null and !#records.isEmpty() and minutesLate() > 5',
+    usageEx3: '没打卡算缺卡：#records == null or #records.isEmpty()',
+    usageEx4: '部门名包含「销售」且迟到：inDept([2,3], true) and minutesLate() > 10',
+    usageEx5: '张三不记迟到：#ban.realName != null and #ban.realName.contains("张三")'
   },
   record: {
     title: '打卡记录',

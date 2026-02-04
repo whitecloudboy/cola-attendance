@@ -36,6 +36,7 @@
           <el-menu-item index="/attendance/device">{{ t('menu.attendance.device') }}</el-menu-item>
           <el-menu-item index="/attendance/record">{{ t('menu.attendance.record') }}</el-menu-item>
           <el-menu-item index="/attendance/result">{{ t('menu.attendance.result') }}</el-menu-item>
+          <el-menu-item index="/attendance/rule-dsl">{{ t('menu.attendance.ruleDsl') }}</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>

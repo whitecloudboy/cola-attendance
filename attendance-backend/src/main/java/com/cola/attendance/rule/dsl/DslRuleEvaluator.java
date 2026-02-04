@@ -1,7 +1,9 @@
 package com.cola.attendance.rule.dsl;
 
+import com.cola.attendance.module.attendance.dto.AttendanceDslConfigDTO;
 import com.cola.attendance.module.attendance.dto.AttendanceRecordDTO;
 import com.cola.attendance.module.attendance.service.AttendanceBanRecordAdapter;
+import com.cola.attendance.module.attendance.service.AttendanceDslConfigService;
 import com.cola.attendance.rule.IEventEvaluator;
 import com.cola.attendance.rule.RuleDutyFacade;
 import com.cola.attendance.rule.RuleContext;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +40,7 @@ public class DslRuleEvaluator implements IEventEvaluator {
     private static final Logger log = LoggerFactory.getLogger(DslRuleEvaluator.class);
     private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final AttendanceDslProperties dslProperties;
+    private final AttendanceDslConfigService dslConfigService;
     private final AttendanceBanRecordAdapter banRecordService;
     private final RuleDutyFacade dutyBanService;
     private final com.cola.attendance.module.system.service.SysDeptService sysDeptService;
@@ -50,22 +53,17 @@ public class DslRuleEvaluator implements IEventEvaluator {
 
     @Override
     public void evaluate(RuleContext context, RuleOutcome outcome) {
-        if (context == null || context.getEvent() == null || !dslProperties.isEnabled()) return;
+        if (context == null || context.getEvent() == null) return;
+        AttendanceDslConfigDTO config = dslConfigService.getEffectiveConfig();
+        if (!config.isEnabled()) return;
         String eventType = context.getEvent().getEventType();
         if (!StringUtils.hasText(eventType)) return;
-        // 初始版本无版本服务，仅用配置文件规则
-        AttendanceDslRuleSet ruleSet = null;
-        if (ruleSet != null && outcome != null && StringUtils.hasText(ruleSet.getVersionNo())) {
-            outcome.setRuleVersion(ruleSet.getVersionNo());
-        }
         if (eventType.contains("start") || "punch".equals(eventType) || "end-check".equals(eventType)) {
-            List<AttendanceDslProperties.DslRule> rules = ruleSet != null ? ruleSet.getStartRules() : dslProperties.getStartRules();
-            applyRules(context, outcome, rules, true);
+            applyRules(context, outcome, toRuleList(config.getStartRules()), true);
         }
         if (eventType.contains("end") || "punch".equals(eventType) || "end-check".equals(eventType)) {
             outcome.setStop(false);
-            List<AttendanceDslProperties.DslRule> rules = ruleSet != null ? ruleSet.getEndRules() : dslProperties.getEndRules();
-            applyRules(context, outcome, rules, false);
+            applyRules(context, outcome, toRuleList(config.getEndRules()), false);
         }
         // 无论规则是否匹配，有打卡记录时始终填充真实打卡时间（确保 checkInTime/checkOutTime 不为空）
         List<AttendanceRecordDTO> records = context.getEvent() != null ? context.getEvent().getAttendanceRecords() : null;
@@ -81,10 +79,14 @@ public class DslRuleEvaluator implements IEventEvaluator {
         }
     }
 
-    private void applyRules(RuleContext context, RuleOutcome outcome,
-                            List<AttendanceDslProperties.DslRule> rules, boolean isStart) {
+    private List<RuleDef> toRuleList(List<AttendanceDslConfigDTO.DslRuleDTO> list) {
+        if (list == null) return Collections.emptyList();
+        return list.stream().map(d -> new RuleDef(d.getName(), d.getWhen(), d.getStartStatus(), d.getEndStatus(), d.isStop())).toList();
+    }
+
+    private void applyRules(RuleContext context, RuleOutcome outcome, List<RuleDef> rules, boolean isStart) {
         if (rules == null || rules.isEmpty()) return;
-        for (AttendanceDslProperties.DslRule rule : rules) {
+        for (RuleDef rule : rules) {
             if (!StringUtils.hasText(rule.getWhen())) continue;
             try {
                 StandardEvaluationContext evalCtx = buildEvalContext(context);
@@ -164,5 +166,25 @@ public class DslRuleEvaluator implements IEventEvaluator {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static class RuleDef {
+        final String name;
+        final String whenExpr;
+        final Integer startStatus;
+        final Integer endStatus;
+        final boolean stop;
+        RuleDef(String name, String whenExpr, Integer startStatus, Integer endStatus, boolean stop) {
+            this.name = name;
+            this.whenExpr = whenExpr;
+            this.startStatus = startStatus;
+            this.endStatus = endStatus;
+            this.stop = stop;
+        }
+        String getName() { return name; }
+        String getWhen() { return whenExpr; }
+        Integer getStartStatus() { return startStatus; }
+        Integer getEndStatus() { return endStatus; }
+        boolean isStop() { return stop; }
     }
 }

@@ -21,7 +21,8 @@ export default {
       title: 'Attendance',
       device: 'Devices',
       record: 'Punch Records',
-      result: 'Attendance Result'
+      result: 'Attendance Result',
+      ruleDsl: 'Rule Config'
     }
   },
   device: {
@@ -61,6 +62,34 @@ export default {
     statusNoCard: 'No Card',
     statusAbnormal: 'Abnormal',
     statusUnknown: '-'
+  },
+  ruleDsl: {
+    title: 'Attendance Rule Config',
+    enabled: 'Enable',
+    enabledTip: 'Disable to skip rule evaluation',
+    startRules: 'Start Rules',
+    endRules: 'End Rules',
+    ruleName: 'Name',
+    whenExpr: 'Condition',
+    startStatus: 'Start Status',
+    endStatus: 'End Status',
+    stop: 'Stop on match',
+    usageTitle: 'Usage',
+    usageIntro: 'Rules evaluate punch records to set start/end status. Match order: top to bottom; first match wins if "Stop on match" is on.',
+    usageVars: 'Variables: ',
+    usageVarBan: '#ban (deptName, realName)',
+    usageVarRecords: '#records (punch list, isEmpty() = no punch)',
+    usageFuncs: 'Functions: ',
+    usageFuncLate: 'minutesLate() - late minutes (0=on time, pos=late)',
+    usageFuncEarly: 'minutesEarlyLeave() - early leave minutes',
+    usageFuncDept: 'isDept(id), inDept([ids], includeSub)',
+    usageFuncPerson: 'isPerson(id)',
+    usageExamples: 'Examples: ',
+    usageEx1: 'On time: !#records.isEmpty() and minutesLate() <= 5',
+    usageEx2: 'Late: !#records.isEmpty() and minutesLate() > 5',
+    usageEx3: 'No punch: #records.isEmpty()',
+    usageEx4: 'Dept + late: inDept([2,3], true) and minutesLate() > 10',
+    usageEx5: 'Exempt: #ban.realName.contains("张三")'
   },
   record: {
     title: 'Punch Records',

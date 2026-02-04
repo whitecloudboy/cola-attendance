@@ -49,19 +49,33 @@ attendance:
     dsl:
       enabled: true
       startRules:
+        # 有打卡 且 迟到≤5分钟 视为正常（minutesLate: 0=准时 负=提前 正=迟到分钟）
         - name: normal-start
-          when: "#ban != null and #records != null and !#records.isEmpty()"
+          when: "#ban != null and #records != null and !#records.isEmpty() and minutesLate() <= 5"
           startStatus: 1
           stop: true
+        # 有打卡 且 迟到>5分钟 视为迟到
+        - name: late-start
+          when: "#ban != null and #records != null and !#records.isEmpty() and minutesLate() > 5"
+          startStatus: 2
+          stop: true
+        # 无打卡 视为缺卡
         - name: no-record-start
           when: "#ban != null and (#records == null || #records.isEmpty())"
           startStatus: 3
           stop: true
       endRules:
+        # 有打卡 且 早退≤5分钟或延后 视为正常（minutesEarlyLeave: ≤0=准时/延后 >0=早退分钟）
         - name: normal-end
-          when: "#ban != null and #records != null and !#records.isEmpty()"
+          when: "#ban != null and #records != null and !#records.isEmpty() and minutesEarlyLeave() <= 5"
           endStatus: 1
           stop: true
+        # 有打卡 且 早退>5分钟 视为早退
+        - name: early-leave-end
+          when: "#ban != null and #records != null and !#records.isEmpty() and minutesEarlyLeave() > 5"
+          endStatus: 4
+          stop: true
+        # 无打卡 视为缺卡
         - name: no-record-end
           when: "#ban != null and (#records == null || #records.isEmpty())"
           endStatus: 3

@@ -18,7 +18,8 @@ const routes = [
       { path: 'schedule/schedule', name: 'Schedule', component: () => import('../views/schedule/schedule.vue'), meta: { titleKey: 'schedulePage.title' } },
       { path: 'attendance/device', name: 'Device', component: () => import('../views/attendance/device.vue'), meta: { titleKey: 'device.title' } },
       { path: 'attendance/record', name: 'Record', component: () => import('../views/attendance/record.vue'), meta: { titleKey: 'record.title' } },
-      { path: 'attendance/result', name: 'Result', component: () => import('../views/attendance/result.vue'), meta: { titleKey: 'result.title' } }
+      { path: 'attendance/result', name: 'Result', component: () => import('../views/attendance/result.vue'), meta: { titleKey: 'result.title' } },
+      { path: 'attendance/rule-dsl', name: 'RuleDsl', component: () => import('../views/attendance/rule-dsl.vue'), meta: { titleKey: 'ruleDsl.title' } }
     ]
   }
 ]
