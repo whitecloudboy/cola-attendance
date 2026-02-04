@@ -1,6 +1,6 @@
-# cola-attendance
+﻿# cola-attendance
 
-[中文](README.md) | [English](README.en.md)
+[中文](README.zh-CN.md) | [English](README.md)
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Java](https://img.shields.io/badge/Java-21-blue.svg)
@@ -8,72 +8,74 @@
 ![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)
 
-一个面向值班/考勤场景的开源系统，覆盖：
-- 组织与权限（部门、用户、角色、菜单）
-- 排班（班次、排班结果）
-- 考勤（设备、打卡记录、考勤结果）
-- 规则引擎（DSL/SpEL）
-- 定时任务与 E2E 全链路脚本
+An open-source attendance and duty scheduling system for real-world shift scenarios, including:
+- Organization and permission management (department, user, role, menu)
+- Scheduling (shift definitions and duty schedules)
+- Attendance (devices, punch records, attendance results)
+- Rule engine (DSL/SpEL)
+- Scheduled jobs and E2E automation scripts
 
-## 1. 技术栈
+## 1. Tech Stack
 
-- 后端：`Spring Boot 3`、`JDK 21`、`MyBatis-Plus`、`Spring Security`、`JWT`
-- 前端：`Vue 3`、`Vite`、`Element Plus`
-- 数据库：`MySQL 8+`
+- Backend: `Spring Boot 3`, `JDK 21`, `MyBatis-Plus`, `Spring Security`, `JWT`
+- Frontend: `Vue 3`, `Vite`, `Element Plus`
+- Database: `MySQL 8+`
 
-## 2. 仓库结构
+## 2. Repository Structure
 
 ```text
 cola-attendance/
-├─ attendance-backend/      # Java 后端
-├─ attendance-frontend/     # Vue 前端
-├─ docs/                    # 数据库脚本、设计文档、E2E说明
-├─ scripts/                 # E2E 自动化脚本（Python + PowerShell）
-├─ docker-compose.yml       # 本地/Demo 运行编排
-└─ TASKS.md                 # 项目任务清单与阶段状态
+鈹溾攢 attendance-backend/      # Java backend
+鈹溾攢 attendance-frontend/     # Vue frontend
+鈹溾攢 docs/                    # DB scripts, design docs, E2E docs
+鈹溾攢 scripts/                 # E2E automation (Python + PowerShell)
+鈹溾攢 docker-compose.yml       # Local/demo orchestration
+鈹斺攢 TASKS.md                 # Project task list and progress
 ```
 
-## 3. 核心功能
+## 3. Core Features
 
-- 认证与权限：登录返回 JWT，请求头使用 `token`
-- System 模块：部门/用户/角色/菜单 CRUD，支持树结构
-- 排班模块：班次管理、排班维护、批量排班/取消
-- 考勤模块：设备管理、打卡记录（含 Excel 导入、设备回调）、考勤结果
-- 规则引擎：支持通过 DSL（SpEL）配置上下班判定规则
-- 定时任务：
-  - 每日 `01:00` 生成空考勤记录
-  - 每日 `23:55` 执行日终补录
+- Auth and access control: JWT-based login, request header uses `token`
+- System module: CRUD for department/user/role/menu, with tree structure support
+- Scheduling module: shift management, schedule maintenance, batch scheduling/cancel
+- Attendance module: device management, punch records (including Excel import and device callback), attendance results
+- Rule engine: configurable attendance decision rules through DSL (SpEL)
+- Scheduled jobs:
+  - Generate empty attendance records daily at `01:00`
+  - Run end-of-day supplement daily at `23:55`
 
-## 4. 本地开发快速开始
+## 4. Quick Start (Local Development)
 
-### 4.1 前置要求
+### 4.1 Prerequisites
 
 - JDK 21
 - Maven 3.8+
 - MySQL 8+
-- Node.js 18+（仅前端需要）
+- Node.js 18+ (frontend only)
 
-### 4.2 初始化数据库
+### 4.2 Initialize Database
 
-1. 执行建表脚本：`docs/attendance-db-schema.sql`  `docs/attendance-db-schema-alter.sql`
-2. 初始化管理员：`attendance-backend/src/main/resources/sql/init-admin.sql`
+1. Run schema scripts:
+   - `docs/attendance-db-schema.sql`
+   - `docs/attendance-db-schema-alter.sql`
+2. Initialize admin user:
+   - `attendance-backend/src/main/resources/sql/init-admin.sql`
 
-默认管理员账号：
-- 用户名：`admin`
-- 密码：`123456`
+Default admin account:
+- Username: `admin`
+- Password: `123456`
 
-### 4.3 启动后端
+### 4.3 Start Backend
 
 ```bash
 cd attendance-backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-启动后可访问：
-- Swagger：`http://localhost:8080/swagger-ui.html`
-- 健康检查可用你的接口测试工具直接验证登录接口
+Available after startup:
+- Swagger: `http://localhost:8080/swagger-ui.html`
 
-### 4.4 启动前端（可选）
+### 4.4 Start Frontend (Optional)
 
 ```bash
 cd attendance-frontend
@@ -81,76 +83,77 @@ npm install
 npm run dev
 ```
 
-默认地址：`http://localhost:5173`  
-开发代理：`/api -> http://localhost:8080`（见 `attendance-frontend/vite.config.js`）
+Default URL: `http://localhost:5173`  
+Dev proxy: `/api -> http://localhost:8080` (see `attendance-frontend/vite.config.js`)
 
-## 5. Docker 运行（后端 + MySQL）
+## 5. Docker (Backend + MySQL)
 
 ```bash
 docker compose up -d
 ```
 
-说明：
-- Compose 会启动 `mysql` 和 `backend`
-- 后端地址：`http://localhost:8080`
-- Swagger：`http://localhost:8080/swagger-ui.html`
-- 当前 Compose 默认不会自动执行 SQL 初始化脚本，首次仍需手工导入：
+Notes:
+- Starts `mysql` and `backend`
+- Backend URL: `http://localhost:8080`
+- Swagger: `http://localhost:8080/swagger-ui.html`
+- Current Compose setup does not auto-run SQL initialization scripts, so you still need to import:
   - `docs/attendance-db-schema.sql`
   - `docs/attendance-db-schema-alter.sql`
   - `attendance-backend/src/main/resources/sql/init-admin.sql`
 
-## 6. E2E 全链路测试
+## 6. E2E Full-Flow Test
 
-安装依赖：
+Install dependencies:
 
 ```bash
 pip install -r scripts/requirements.txt
 ```
 
-一键跑全链路：
+Run one full cycle:
 
 ```powershell
 .\scripts\full_link_cycle.ps1 -Cycles 1 -Date 2025-02-05 -SampleCount 5 -ReportDir logs
 ```
 
-流程包含：
-- 清理测试数据
-- 自动排班
-- 模拟打卡并触发规则
-- 日终补录
-- 正确性校验并输出报告
+Flow includes:
+- Cleanup test data
+- Auto scheduling
+- Punch simulation and rule triggering
+- End-of-day supplement
+- Correctness verification with report output
 
-详细说明见：`docs/e2e-attendance-test.md`
+Details: `docs/e2e-attendance-test.md`
 
-## 7. 关键配置项
+## 7. Key Environment Variables
 
-建议通过环境变量覆盖敏感配置：
+Use environment variables for sensitive values:
 
-| 变量名 | 说明 | 示例 |
+| Variable | Description | Example |
 |---|---|---|
-| `JWT_SECRET` | JWT 签名密钥（生产必设，建议 >= 32 字符） | `replace-with-random-secret` |
-| `JWT_EXPIRATION_MS` | Token 有效期（毫秒） | `86400000` |
-| `SPRING_DATASOURCE_URL` | 数据库 JDBC URL | `jdbc:mysql://mysql:3306/attendance?...` |
-| `SPRING_DATASOURCE_USERNAME` | 数据库用户名 | `root` |
-| `SPRING_DATASOURCE_PASSWORD` | 数据库密码 | `strong-password` |
+| `JWT_SECRET` | JWT signing secret (required in production, recommended >= 32 chars) | `replace-with-random-secret` |
+| `JWT_EXPIRATION_MS` | Token expiration in milliseconds | `86400000` |
+| `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:mysql://mysql:3306/attendance?...` |
+| `SPRING_DATASOURCE_USERNAME` | DB username | `root` |
+| `SPRING_DATASOURCE_PASSWORD` | DB password | `strong-password` |
 
-脚本相关：
-- `COLA_ATTENDANCE_BASE_URL`：E2E 脚本请求的后端地址（默认 `http://localhost:8080`）
+Script-related:
+- `COLA_ATTENDANCE_BASE_URL`: backend base URL for E2E scripts (default `http://localhost:8080`)
 
-## 8. 接口访问约定
+## 8. API Usage Convention
 
-- 登录接口：`POST /system/auth/login`
-- 登录成功后，把返回的 token 放到请求头：`token: <jwt>`
+- Login endpoint: `POST /system/auth/login`
+- Put login token into request header: `token: <jwt>`
 
-## 9. 项目状态
+## 9. Project Status
 
-当前已完成：
-- system、schedule、attendance、rule-engine 主功能
-- E2E 自动化脚本与文档
+Completed:
+- Main capabilities in system, schedule, attendance, and rule-engine modules
+- E2E automation scripts and docs
 
-待增强项见：`TASKS.md`
+Enhancement backlog: `TASKS.md`
 
-## 10. 贡献与许可
+## 10. Contributing and License
 
-- 贡献指南：`CONTRIBUTING.md`
-- 开源许可：`LICENSE`
+- Contributing guide: `CONTRIBUTING.md`
+- License: `LICENSE`
+

@@ -1,6 +1,6 @@
-# cola-attendance
+﻿# cola-attendance
 
-[中文](README.md) | [English](README.en.md)
+[中文](README.zh-CN.md) | [English](README.en.md)
 
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Java](https://img.shields.io/badge/Java-21-blue.svg)
@@ -25,12 +25,12 @@ An open-source attendance and duty scheduling system for real-world shift scenar
 
 ```text
 cola-attendance/
-├─ attendance-backend/      # Java backend
-├─ attendance-frontend/     # Vue frontend
-├─ docs/                    # DB scripts, design docs, E2E docs
-├─ scripts/                 # E2E automation (Python + PowerShell)
-├─ docker-compose.yml       # Local/demo orchestration
-└─ TASKS.md                 # Project task list and progress
+鈹溾攢 attendance-backend/      # Java backend
+鈹溾攢 attendance-frontend/     # Vue frontend
+鈹溾攢 docs/                    # DB scripts, design docs, E2E docs
+鈹溾攢 scripts/                 # E2E automation (Python + PowerShell)
+鈹溾攢 docker-compose.yml       # Local/demo orchestration
+鈹斺攢 TASKS.md                 # Project task list and progress
 ```
 
 ## 3. Core Features
@@ -156,3 +156,4 @@ Enhancement backlog: `TASKS.md`
 
 - Contributing guide: `CONTRIBUTING.md`
 - License: `LICENSE`
+
