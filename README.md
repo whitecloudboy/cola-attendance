@@ -38,16 +38,16 @@ An open-source attendance and duty scheduling system for real-world shift scenar
 ### Fastest way to run
 
 ```bash
-# 1) start backend + mysql
+# 1) optional: set host ports when 3306/8080 are occupied
+# export MYSQL_PORT=3308
+# export BACKEND_PORT=18082
+
+# 2) start backend + mysql
 docker compose up -d
 
-# 2) manually initialize schema and admin (one-time)
-# docs/attendance-db-schema.sql
-# docs/attendance-db-schema-alter.sql
-# attendance-backend/src/main/resources/sql/init-admin.sql
-
 # 3) open swagger
-# http://localhost:8080/swagger-ui.html
+# default: http://localhost:8080/swagger-ui.html
+# custom:  http://localhost:<BACKEND_PORT>/swagger-ui.html
 ```
 
 ## 1. Tech Stack
@@ -129,12 +129,28 @@ docker compose up -d
 
 Notes:
 - Starts `mysql` and `backend`
-- Backend URL: `http://localhost:8080`
-- Swagger: `http://localhost:8080/swagger-ui.html`
-- Current Compose setup does not auto-run SQL initialization scripts, so you still need to import:
+- MySQL first-time init is automatic (runs SQL in `/docker-entrypoint-initdb.d`):
   - `docs/attendance-db-schema.sql`
   - `docs/attendance-db-schema-alter.sql`
   - `attendance-backend/src/main/resources/sql/init-admin.sql`
+- Default host ports:
+  - MySQL: `3306` (from `${MYSQL_PORT:-3306}`)
+  - Backend: `8080` (from `${BACKEND_PORT:-8080}`)
+- If ports are occupied on your machine, run with custom ports:
+
+```bash
+MYSQL_PORT=3308 BACKEND_PORT=18082 docker compose up -d
+```
+
+- Then use:
+  - Backend URL: `http://localhost:<BACKEND_PORT>`
+  - Swagger: `http://localhost:<BACKEND_PORT>/swagger-ui.html`
+- If you need to re-run DB init scripts, remove volume and recreate:
+
+```bash
+docker compose down -v
+docker compose up -d
+```
 
 ## 6. E2E Full-Flow Test
 

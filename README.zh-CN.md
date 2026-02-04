@@ -38,16 +38,16 @@
 ### 最快跑起来
 
 ```bash
-# 1）启动 backend + mysql
+# 1）如果 3306/8080 被占用，先设置端口（可选）
+# PowerShell:
+# $env:MYSQL_PORT='3308'; $env:BACKEND_PORT='18082'
+
+# 2）启动 backend + mysql
 docker compose up -d
 
-# 2）手工初始化数据库（首次一次）
-# docs/attendance-db-schema.sql
-# docs/attendance-db-schema-alter.sql
-# attendance-backend/src/main/resources/sql/init-admin.sql
-
 # 3）打开 Swagger
-# http://localhost:8080/swagger-ui.html
+# 默认: http://localhost:8080/swagger-ui.html
+# 自定义: http://localhost:<BACKEND_PORT>/swagger-ui.html
 ```
 
 ## 1. 技术栈
@@ -129,12 +129,30 @@ docker compose up -d
 
 说明：
 - Compose 会启动 `mysql` 和 `backend`
-- 后端地址：`http://localhost:8080`
-- Swagger：`http://localhost:8080/swagger-ui.html`
-- 当前 Compose 默认不会自动执行 SQL 初始化脚本，首次仍需手工导入：
+- MySQL 首次初始化会自动执行（`/docker-entrypoint-initdb.d`）：
   - `docs/attendance-db-schema.sql`
   - `docs/attendance-db-schema-alter.sql`
   - `attendance-backend/src/main/resources/sql/init-admin.sql`
+- 默认主机端口：
+  - MySQL：`3306`（来自 `${MYSQL_PORT:-3306}`）
+  - 后端：`8080`（来自 `${BACKEND_PORT:-8080}`）
+- 如果端口被占用，可指定自定义端口：
+
+```powershell
+$env:MYSQL_PORT='3308'
+$env:BACKEND_PORT='18082'
+docker compose up -d
+```
+
+- 然后访问：
+  - 后端：`http://localhost:<BACKEND_PORT>`
+  - Swagger：`http://localhost:<BACKEND_PORT>/swagger-ui.html`
+- 如需重新执行数据库初始化脚本，删除数据卷后重建：
+
+```bash
+docker compose down -v
+docker compose up -d
+```
 
 ## 6. E2E 全链路测试
 
