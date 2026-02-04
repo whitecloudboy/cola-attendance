@@ -1,5 +1,13 @@
 # cola-attendance
 
+[中文](README.md) | [English](README.en.md)
+
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Java](https://img.shields.io/badge/Java-21-blue.svg)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F.svg)
+![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)
+
 一个面向值班/考勤场景的开源系统，覆盖：
 - 组织与权限（部门、用户、角色、菜单）
 - 排班（班次、排班结果）
