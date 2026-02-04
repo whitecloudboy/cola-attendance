@@ -33,6 +33,20 @@ E2E 测试覆盖考勤业务全流程：**排班 → 生成空考勤 → 打卡�
 - 打卡事件触发规则引擎更新考勤结果
 - 定时生成空考勤、日终补录任务（含手动触发）
 - 考勤结果查询与分页
+- **交接班（含班次分组号 groupNo）**：见 2.2 与脚本 `e2e_handover.py`
+
+### 2.2 交接班 E2E（groupNo）
+
+交接班“下一班”按**班次分组号（group_no）**匹配时，需同一组内班次时间首尾相接（如白班 16:00 结束 → 中班 16:00 开始）。E2E 覆盖方式：
+
+1. **测试数据**：`docs/test-data-hospital.sql` 中白班/中班/夜班使用同一 `group_no='001'`、同一 `dept_id=8`，形成交接班链。
+2. **专用脚本**：`scripts/e2e_handover.py`  
+   - 清理 → 为 2 人排班（白班、中班）→ 生成空考勤 → 模拟打卡（白 08:00/16:00，中 16:00/次日 00:00）→ 日终补录 → 校验两人考勤结果均有打卡时间。  
+   - 日终补录会执行规则引擎，其中 `handoverOk()` / `getAfterBans()` 会按 groupNo 查找下一班，从而覆盖交接班+分组号逻辑。
+3. **运行示例**（需先执行 test-data-hospital.sql，并启动后端）：
+   ```powershell
+   python scripts/e2e_handover.py --date 2025-02-05
+   ```
 
 ---
 
@@ -135,6 +149,7 @@ python scripts/verify_result.py --date 2025-02-05 --samples 5 --output logs/veri
 | `auto_schedule.py` | 自动排班 |
 | `simulate_punch.py` | 模拟打卡 + 触发生成空考勤与日终补录 |
 | `verify_result.py` | 正确性校验 |
+| `e2e_handover.py` | 交接班 E2E（班次分组号 groupNo 覆盖） |
 | `full_link_cycle.ps1` | 全链路编排 |
 | `requirements.txt` | Python 依赖 |
 
