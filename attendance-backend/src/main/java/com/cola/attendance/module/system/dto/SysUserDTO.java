@@ -19,6 +19,8 @@ public class SysUserDTO {
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
     private List<Long> roleIds;
+    /** 岗位ID列表（多选） */
+    private List<Long> postIds;
     /** 新建时可选，不填则默认 123456 */
     private String password;
 }

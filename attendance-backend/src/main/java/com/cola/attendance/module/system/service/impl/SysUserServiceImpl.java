@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cola.attendance.module.system.dao.SysUserDao;
+import com.cola.attendance.module.system.dao.SysUserPostDao;
 import com.cola.attendance.module.system.dao.SysUserRoleDao;
 import com.cola.attendance.module.system.dto.SysUserDTO;
 import com.cola.attendance.module.system.entity.SysUserEntity;
+import com.cola.attendance.module.system.entity.SysUserPostEntity;
 import com.cola.attendance.module.system.entity.SysUserRoleEntity;
 import com.cola.attendance.module.system.service.SysDeptService;
 import com.cola.attendance.module.system.service.SysUserService;
@@ -22,11 +24,13 @@ import java.util.stream.Collectors;
 public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> implements SysUserService {
 
     private final SysUserRoleDao sysUserRoleDao;
+    private final SysUserPostDao sysUserPostDao;
     private final SysDeptService sysDeptService;
     private final PasswordEncoder passwordEncoder;
 
-    public SysUserServiceImpl(SysUserRoleDao sysUserRoleDao, SysDeptService sysDeptService, PasswordEncoder passwordEncoder) {
+    public SysUserServiceImpl(SysUserRoleDao sysUserRoleDao, SysUserPostDao sysUserPostDao, SysDeptService sysDeptService, PasswordEncoder passwordEncoder) {
         this.sysUserRoleDao = sysUserRoleDao;
+        this.sysUserPostDao = sysUserPostDao;
         this.sysDeptService = sysDeptService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -65,6 +69,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
                 sysUserRoleDao.insert(ur);
             }
         }
+        if (dto.getPostIds() != null) {
+            for (Long postId : dto.getPostIds()) {
+                SysUserPostEntity up = new SysUserPostEntity();
+                up.setUserId(e.getId());
+                up.setPostId(postId);
+                sysUserPostDao.insert(up);
+            }
+        }
     }
 
     @Override
@@ -87,6 +99,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
                 ur.setUserId(e.getId());
                 ur.setRoleId(roleId);
                 sysUserRoleDao.insert(ur);
+            }
+        }
+        sysUserPostDao.delete(new LambdaQueryWrapper<SysUserPostEntity>().eq(SysUserPostEntity::getUserId, e.getId()));
+        if (dto.getPostIds() != null) {
+            for (Long postId : dto.getPostIds()) {
+                SysUserPostEntity up = new SysUserPostEntity();
+                up.setUserId(e.getId());
+                up.setPostId(postId);
+                sysUserPostDao.insert(up);
             }
         }
     }
@@ -115,6 +136,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> i
         dto.setCreatedAt(e.getCreatedAt());
         var roleList = sysUserRoleDao.selectList(new LambdaQueryWrapper<SysUserRoleEntity>().eq(SysUserRoleEntity::getUserId, e.getId()));
         dto.setRoleIds(roleList.stream().map(SysUserRoleEntity::getRoleId).collect(Collectors.toList()));
+        var postList = sysUserPostDao.selectList(new LambdaQueryWrapper<SysUserPostEntity>().eq(SysUserPostEntity::getUserId, e.getId()));
+        dto.setPostIds(postList.stream().map(SysUserPostEntity::getPostId).collect(Collectors.toList()));
         return dto;
     }
 }

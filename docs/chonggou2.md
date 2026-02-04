@@ -55,13 +55,53 @@
 
 ## 5. 第二步交付物（自检）
 
-- [ ] 班次与排班 CRUD、列表/日历。
-- [ ] 考勤设备、打卡记录 CRUD 与导入；考勤结果生成与查询。
-- [ ] 定时任务、规则引擎、日终补录。
-- [ ] 规则参数与 DSL 配置生效。
+- [x] 班次与排班 CRUD、列表/日历。
+- [x] 考勤设备、打卡记录 CRUD 与导入；考勤结果生成与查询。
+- [x] 定时任务、规则引擎、日终补录。
+- [x] 规则参数与 DSL 配置生效。
 
 ---
 
 ## 6. 后续演进方向
 
 - 多租户；规则引擎版本化与灰度；Docker 一键部署（MySQL + attendance-backend + 可选 attendance-frontend）。
+
+---
+
+## 7. E2E 全链路测试脚本（归档）
+
+> 从 ies 迁移并适配。注意：ies 的「对账」原指新旧考勤逻辑对比；qianyi 无旧逻辑，故仅保留**预期 vs 实际**的正确性校验。
+
+### 7.1 设计目标
+
+1. **流程**：清理 → 排班 → 生成空考勤 → 模拟打卡 → 日终补录 → 正确性校验。
+2. **正确性校验**：根据打卡记录 + 班次时间窗推算期望的 checkIn/checkOut 与状态，与 `attendance_result` 实际结果比对，验证规则引擎计算正确性。
+3. **不包含**：ies 的「新旧逻辑并行对账」（qianyi 无旧逻辑）。
+
+### 7.2 API 与数据模型对照
+
+| ies | qianyi |
+|-----|--------|
+| 8081/duty | 8080/api |
+| /duty/login (token) | /system/auth/login (JWT) |
+| duty_set_ban | duty_schedule |
+| attendance_ban_record | attendance_result |
+| checkStartTime/checkEndTime | checkInTime/checkOutTime |
+| personId | userId |
+
+### 7.3 任务清单
+
+- [x] 后端：日终补录手动触发 API（`POST /attendance/result/trigger-end-task`）。
+- [x] 后端：打卡记录/考勤结果按 ID 删除（E2E 清理用）。
+- [x] `scripts/http_client.py`：通用 HTTP 工具。
+- [x] `scripts/config.py`、`scripts/login.py`：配置与 JWT 登录。
+- [x] `scripts/cleanup_attendance.py`：清理 attendance_record、attendance_result、duty_schedule。
+- [x] `scripts/auto_schedule.py`：按 sys_user + duty_shift 生成 duty_schedule。
+- [x] `scripts/simulate_punch.py`：Excel 导入打卡，触发生成空考勤与日终补录（需 openpyxl）。
+- [x] `scripts/verify_result.py`：根据打卡推算期望值，与 attendance_result 比对并输出摘要。
+- [x] `scripts/full_link_cycle.ps1`：编排全流程。
+
+### 7.4 脚本依赖
+
+- Python 3.8+，curl。
+- 服务地址默认 `http://localhost:8080/api`，登录账号需在 init-admin 中存在。

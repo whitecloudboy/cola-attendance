@@ -14,6 +14,24 @@ import java.util.stream.Collectors;
 public class SysDeptServiceImpl extends ServiceImpl<SysDeptDao, SysDeptEntity> implements SysDeptService {
 
     @Override
+    public List<Long> getSubDeptIdList(Long deptId) {
+        if (deptId == null) return List.of();
+        List<SysDeptEntity> all = list();
+        List<Long> ids = new java.util.ArrayList<>();
+        collectSubIds(all, deptId, ids);
+        return ids;
+    }
+
+    private void collectSubIds(List<SysDeptEntity> all, Long parentId, List<Long> out) {
+        out.add(parentId);
+        for (SysDeptEntity e : all) {
+            if (parentId.equals(e.getParentId())) {
+                collectSubIds(all, e.getId(), out);
+            }
+        }
+    }
+
+    @Override
     public List<SysDeptDTO> tree() {
         List<SysDeptEntity> all = list();
         return buildTree(all, null);

@@ -2,74 +2,74 @@
   <div class="page">
     <el-card>
       <template #header>
-        <span>菜单管理</span>
-        <el-button type="primary" style="float:right" @click="openForm()">新增</el-button>
+        <span>{{ t('menuMgmt.title') }}</span>
+        <el-button type="primary" style="float:right" @click="openForm()">{{ t('action.add') }}</el-button>
       </template>
       <el-table :data="tableData" row-key="id" default-expand-all border>
-        <el-table-column prop="name" label="菜单名称" min-width="140" />
-        <el-table-column prop="path" label="路由路径" width="140" />
-        <el-table-column prop="type" label="类型" width="80">
+        <el-table-column prop="name" :label="t('menuMgmt.menuName')" min-width="140" />
+        <el-table-column prop="path" :label="t('menuMgmt.routePath')" width="140" />
+        <el-table-column prop="type" :label="t('menuMgmt.type')" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.type === 1 ? 'primary' : 'info'">{{ row.type === 1 ? '菜单' : '按钮' }}</el-tag>
+            <el-tag :type="row.type === 1 ? 'primary' : 'info'">{{ row.type === 1 ? t('menuMgmt.typeMenu') : t('menuMgmt.typeButton') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="sort" label="排序" width="80" />
-        <el-table-column prop="visible" label="可见" width="80">
-          <template #default="{ row }">{{ row.visible === 1 ? '是' : '否' }}</template>
+        <el-table-column prop="sort" :label="t('menuMgmt.sort')" width="80" />
+        <el-table-column prop="visible" :label="t('menuMgmt.visible')" width="80">
+          <template #default="{ row }">{{ row.visible === 1 ? t('menuMgmt.yes') : t('menuMgmt.no') }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column :label="t('action.operation')" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="openForm(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="primary" link @click="openForm(row)">{{ t('action.edit') }}</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ t('action.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="form.id ? '编辑菜单' : '新增菜单'" width="520" @close="formRef?.resetFields()">
+    <el-dialog v-model="dialogVisible" :title="form.id ? t('menuMgmt.dialogEdit') : t('menuMgmt.dialogAdd')" width="520" @close="formRef?.resetFields()">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="上级菜单">
+        <el-form-item :label="t('menuMgmt.parent')">
           <el-tree-select
             v-model="form.parentId"
             :data="treeSelectData"
             :props="{ label: 'name', value: 'id' }"
-            placeholder="不选为顶级"
+            :placeholder="t('menuMgmt.parentPlaceholder')"
             clearable
             check-strictly
             style="width:100%"
           />
         </el-form-item>
-        <el-form-item label="菜单名称" prop="name">
-          <el-input v-model="form.name" placeholder="菜单名称" />
+        <el-form-item :label="t('menuMgmt.menuName')" prop="name">
+          <el-input v-model="form.name" :placeholder="t('menuMgmt.menuName')" />
         </el-form-item>
-        <el-form-item label="路由路径">
-          <el-input v-model="form.path" placeholder="/system/xxx" />
+        <el-form-item :label="t('menuMgmt.routePath')">
+          <el-input v-model="form.path" :placeholder="t('menuMgmt.pathPlaceholder')" />
         </el-form-item>
-        <el-form-item label="类型" prop="type">
+        <el-form-item :label="t('menuMgmt.type')" prop="type">
           <el-radio-group v-model="form.type">
-            <el-radio :label="1">菜单</el-radio>
-            <el-radio :label="2">按钮</el-radio>
+            <el-radio :label="1">{{ t('menuMgmt.typeMenu') }}</el-radio>
+            <el-radio :label="2">{{ t('menuMgmt.typeButton') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="权限标识">
-          <el-input v-model="form.permission" placeholder="如 system:user:list" />
+        <el-form-item :label="t('menuMgmt.permission')">
+          <el-input v-model="form.permission" :placeholder="t('menuMgmt.permissionPlaceholder')" />
         </el-form-item>
-        <el-form-item label="图标">
-          <el-input v-model="form.icon" placeholder="Element Plus 图标名" />
+        <el-form-item :label="t('menuMgmt.icon')">
+          <el-input v-model="form.icon" :placeholder="t('menuMgmt.iconPlaceholder')" />
         </el-form-item>
-        <el-form-item label="排序" prop="sort">
+        <el-form-item :label="t('menuMgmt.sort')" prop="sort">
           <el-input-number v-model="form.sort" :min="0" />
         </el-form-item>
-        <el-form-item label="可见">
+        <el-form-item :label="t('menuMgmt.visible')">
           <el-radio-group v-model="form.visible">
-            <el-radio :label="1">是</el-radio>
-            <el-radio :label="0">否</el-radio>
+            <el-radio :label="1">{{ t('menuMgmt.yes') }}</el-radio>
+            <el-radio :label="0">{{ t('menuMgmt.no') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('action.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="submitForm">{{ t('action.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -78,8 +78,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { getMenuTree, saveMenu, updateMenu, deleteMenu } from '../../api/menu'
 
+const { t } = useI18n()
 const tableData = ref([])
 const dialogVisible = ref(false)
 const formRef = ref(null)
@@ -87,7 +89,7 @@ const submitLoading = ref(false)
 const form = reactive({
   id: null, parentId: null, name: '', path: '', type: 1, permission: '', icon: '', sort: 0, visible: 1
 })
-const rules = { name: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }] }
+const rules = { name: [{ required: true, message: () => t('menuMgmt.menuNameRequired'), trigger: 'blur' }] }
 
 const treeSelectData = ref([])
 
@@ -136,7 +138,7 @@ async function submitForm() {
   try {
     if (form.id) await updateMenu(form)
     else await saveMenu(form)
-    ElMessage.success('保存成功')
+    ElMessage.success(t('common.saveSuccess'))
     dialogVisible.value = false
     load()
   } finally {
@@ -145,10 +147,10 @@ async function submitForm() {
 }
 
 function handleDelete(row) {
-  ElMessageBox.confirm('确定删除该菜单？', '提示', { type: 'warning' })
+  ElMessageBox.confirm(t('menuMgmt.deleteConfirm'), t('common.tip'), { type: 'warning' })
     .then(async () => {
       await deleteMenu(row.id)
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       load()
     }).catch(() => {})
 }

@@ -37,3 +37,32 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# 考勤配置（attendance-optimal-design 统一入口）
+attendance:
+  schedule:
+    generate-empty-cron: "0 0 1 * * ?"   # 每日 1:00 生成空考勤
+    end-task-cron: "0 55 23 * * ?"       # 每日 23:55 日终补录
+  rule-engine:
+    enabled: true
+    parallel: false   # false 时 RuleOutcomeHandler 落库 attendance_result
+    dsl:
+      enabled: true
+      startRules:
+        - name: normal-start
+          when: "#ban != null and #records != null and !#records.isEmpty()"
+          startStatus: 1
+          stop: true
+        - name: no-record-start
+          when: "#ban != null and (#records == null || #records.isEmpty())"
+          startStatus: 3
+          stop: true
+      endRules:
+        - name: normal-end
+          when: "#ban != null and #records != null and !#records.isEmpty()"
+          endStatus: 1
+          stop: true
+        - name: no-record-end
+          when: "#ban != null and (#records == null || #records.isEmpty())"
+          endStatus: 3
+          stop: true

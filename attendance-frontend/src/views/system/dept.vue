@@ -2,55 +2,55 @@
   <div class="page">
     <el-card>
       <template #header>
-        <span>部门管理</span>
-        <el-button type="primary" style="float:right" @click="openForm()">新增</el-button>
+        <span>{{ t('dept.title') }}</span>
+        <el-button type="primary" style="float:right" @click="openForm()">{{ t('action.add') }}</el-button>
       </template>
       <el-table :data="tableData" row-key="id" default-expand-all border>
-        <el-table-column prop="name" label="部门名称" min-width="160" />
-        <el-table-column prop="sort" label="排序" width="80" />
-        <el-table-column prop="status" label="状态" width="80">
+        <el-table-column prop="name" :label="t('dept.name')" min-width="160" />
+        <el-table-column prop="sort" :label="t('dept.sort')" width="80" />
+        <el-table-column prop="status" :label="t('dept.status')" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '正常' : '停用' }}</el-tag>
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? t('dept.statusOn') : t('dept.statusOff') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column :label="t('action.operation')" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="openForm(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="primary" link @click="openForm(row)">{{ t('action.edit') }}</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ t('action.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="form.id ? '编辑部门' : '新增部门'" width="480" @close="formRef?.resetFields()">
+    <el-dialog v-model="dialogVisible" :title="form.id ? t('dept.dialogEdit') : t('dept.dialogAdd')" width="480" @close="formRef?.resetFields()">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="上级部门">
+        <el-form-item :label="t('dept.parent')">
           <el-tree-select
             v-model="form.parentId"
             :data="treeSelectData"
             :props="{ label: 'name', value: 'id' }"
-            placeholder="不选为顶级"
+            :placeholder="t('dept.parentPlaceholder')"
             clearable
             check-strictly
             style="width:100%"
           />
         </el-form-item>
-        <el-form-item label="部门名称" prop="name">
-          <el-input v-model="form.name" placeholder="部门名称" />
+        <el-form-item :label="t('dept.name')" prop="name">
+          <el-input v-model="form.name" :placeholder="t('dept.name')" />
         </el-form-item>
-        <el-form-item label="排序" prop="sort">
+        <el-form-item :label="t('dept.sort')" prop="sort">
           <el-input-number v-model="form.sort" :min="0" />
         </el-form-item>
-        <el-form-item label="状态" prop="status">
+        <el-form-item :label="t('dept.status')" prop="status">
           <el-radio-group v-model="form.status">
-            <el-radio :label="1">正常</el-radio>
-            <el-radio :label="0">停用</el-radio>
+            <el-radio :label="1">{{ t('dept.statusOn') }}</el-radio>
+            <el-radio :label="0">{{ t('dept.statusOff') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('action.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="submitForm">{{ t('action.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -59,6 +59,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { getDeptTree, saveDept, updateDept, deleteDept } from '../../api/dept'
 
 const tableData = ref([])
@@ -66,7 +67,8 @@ const dialogVisible = ref(false)
 const formRef = ref(null)
 const submitLoading = ref(false)
 const form = reactive({ id: null, parentId: null, name: '', sort: 0, status: 1 })
-const rules = { name: [{ required: true, message: '请输入部门名称', trigger: 'blur' }] }
+const { t } = useI18n()
+const rules = { name: [{ required: true, message: () => t('dept.nameRequired'), trigger: 'blur' }] }
 
 const treeSelectData = ref([])
 
@@ -107,7 +109,7 @@ async function submitForm() {
   try {
     if (form.id) await updateDept(form)
     else await saveDept(form)
-    ElMessage.success('保存成功')
+    ElMessage.success(t('common.saveSuccess'))
     dialogVisible.value = false
     load()
   } finally {
@@ -116,11 +118,11 @@ async function submitForm() {
 }
 
 function handleDelete(row) {
-  ElMessageBox.confirm('确定删除该部门？', '提示', {
+  ElMessageBox.confirm(t('dept.deleteConfirm'), t('common.tip'), {
     type: 'warning'
   }).then(async () => {
     await deleteDept(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.deleteSuccess'))
     load()
   }).catch(() => {})
 }
