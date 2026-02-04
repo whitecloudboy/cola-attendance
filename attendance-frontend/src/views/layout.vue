@@ -5,7 +5,7 @@
       <el-menu
         :default-active="activeMenu"
         router
-        background-color="#1e3a5f"
+        background-color="#1565c0"
         text-color="#b0c4de"
         active-text-color="#fff"
       >
@@ -103,7 +103,7 @@ function handleLogout() {
 <style scoped>
 .layout { height: 100vh; }
 .aside {
-  background-color: #1e3a5f;
+  background-color: #1565c0;
   overflow-x: hidden;
 }
 .logo {

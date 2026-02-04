@@ -1,6 +1,6 @@
 # E2E 考勤全链路测试说明
 
-本文档描述迁移后工程（qianyi）的 E2E 考勤全链路测试：测试方法、测试范围、测试逻辑及使用说明。
+本文档描述E2E 考勤全链路测试：测试方法、测试范围、测试逻辑及使用说明。
 
 ---
 
@@ -12,7 +12,6 @@ E2E 测试覆盖考勤业务全流程：**排班 → 生成空考勤 → 打卡�
 
 1. **流程验证**：串起清理、排班、打卡、日终补录等步骤，验证端到端链路可正常运行。
 2. **正确性校验**：根据打卡记录与班次时间窗推算期望的 `checkInTime`/`checkOutTime` 与状态，与 `attendance_result` 实际结果比对，验证规则引擎计算正确性。
-3. **不包含**：原 ies 项目的「新旧逻辑并行对账」（qianyi 为新工程，无旧逻辑对比）。
 
 ---
 
@@ -45,12 +44,12 @@ E2E 测试覆盖考勤业务全流程：**排班 → 生成空考勤 → 打卡�
 - **curl**：系统已安装
 - **依赖**：`pip install -r scripts/requirements.txt`（含 openpyxl）
 - **后端**：attendance-backend 已启动，默认 `http://localhost:8080`
-- **数据**：init-admin 已执行，存在 `admin/123456` 账号；需先维护班次（duty_shift）和用户（sys_user）
+- **数据**：init-admin 已执行，存在 `admin/123456` 账号；需先维护班次（duty_shift）和用户（sys_user）,或使用模拟数据test-data-hospital.sql导入。
 
 ### 3.2 一键运行全链路
 
 ```powershell
-cd D:\work\code\qianyi
+cd D:\work\code\cola-attendance
 .\scripts\full_link_cycle.ps1 -Cycles 1 -Date 2025-02-05 -SampleCount 5 -ReportDir logs
 ```
 
@@ -120,7 +119,7 @@ python scripts/verify_result.py --date 2025-02-05 --samples 5 --output logs/veri
 
 | 配置项 | 说明 | 默认 |
 |--------|------|------|
-| `QIANYI_BASE_URL` | 后端服务地址 | `http://localhost:8080` |
+| `COLA_ATTENDANCE_BASE_URL` | 后端服务地址 | `http://localhost:8080` |
 | `scripts/config.py` | 默认登录账号 | admin / 123456 |
 
 ---
@@ -145,3 +144,4 @@ python scripts/verify_result.py --date 2025-02-05 --samples 5 --output logs/veri
 
 - [attendance-db-schema.sql](attendance-db-schema.sql)：数据库表结构
 - 项目任务与阶段见仓库根目录 `TASKS.md`
+- attendance-db-schema-alter.sql：数据库表结构变更记录
