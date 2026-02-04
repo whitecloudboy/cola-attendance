@@ -160,6 +160,9 @@ export default {
   },
   login: {
     title: '考勤与排班 - 登录',
+    slogan: '智能考勤 · 智慧排班',
+    sub: 'AI 驱动的企业考勤与排班系统',
+    formDesc: '欢迎回来，请登录您的账号',
     usernamePlaceholder: '用户名',
     passwordPlaceholder: '密码',
     submit: '登录',

@@ -42,7 +42,21 @@
     </el-aside>
     <el-container>
       <el-header class="header">
-        <span class="title">{{ currentTitle }}</span>
+        <div class="header-left">
+          <span class="title">{{ currentTitle }}</span>
+          <div class="tabs-wrap">
+            <div
+              v-for="tab in tabs"
+              :key="tab.path"
+              class="tab-item"
+              :class="{ active: route.path === tab.path }"
+              @click="goTab(tab)"
+            >
+              <span class="tab-title">{{ tabTitle(tab) }}</span>
+              <el-icon class="tab-close" @click.stop="closeTab(tab)"><Close /></el-icon>
+            </div>
+          </div>
+        </div>
         <div class="user">
           <el-dropdown trigger="click" @command="handleLang">
             <span class="lang">
@@ -72,9 +86,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowDown, Calendar, Setting, Stamp } from '@element-plus/icons-vue'
+import { ArrowDown, Calendar, Close, Setting, Stamp } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../store/user'
 import { setLocale } from '../i18n'
@@ -83,6 +97,50 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const { t, locale } = useI18n()
+
+const tabs = ref([])
+
+watch(
+  () => route.path,
+  (path) => {
+    if (path === '/login' || path === '/') return
+    const exists = tabs.value.some((tab) => tab.path === path)
+    if (!exists) {
+      tabs.value.push({
+        path: route.path,
+        fullPath: route.fullPath,
+        titleKey: route.meta?.titleKey,
+        name: route.name
+      })
+    }
+  },
+  { immediate: true }
+)
+
+function tabTitle(tab) {
+  return tab.titleKey ? t(tab.titleKey) : (tab.name || tab.path)
+}
+
+function goTab(tab) {
+  if (route.path !== tab.path) router.push(tab.fullPath || tab.path)
+}
+
+function closeTab(tab) {
+  const list = tabs.value.filter((t) => t.path !== tab.path)
+  if (route.path === tab.path && list.length) {
+    const next = list[list.length - 1]
+    router.push(next.fullPath || next.path)
+  }
+  if (list.length === 0) {
+    list.push({
+      path: route.path,
+      fullPath: route.fullPath,
+      titleKey: route.meta?.titleKey,
+      name: route.name
+    })
+  }
+  tabs.value = list
+}
 
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => {
@@ -120,13 +178,58 @@ function handleLogout() {
   justify-content: space-between;
   background: #fff;
   box-shadow: 0 1px 4px rgba(0,0,0,.08);
-  padding: 0 20px;
+  padding: 0 16px 0 20px;
+  min-height: 56px;
 }
-.title { font-size: 16px; }
+.header-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.title {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+.tabs-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 0;
+  flex: 1;
+  min-width: 0;
+}
+.tabs-wrap::-webkit-scrollbar { height: 4px; }
+.tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #606266;
+  background: #f0f2f5;
+}
+.tab-item:hover { background: #e4e7ed; }
+.tab-item.active {
+  background: #1565c0;
+  color: #fff;
+}
+.tab-item .tab-close {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.tab-item .tab-close:hover { opacity: 1; }
+.tab-item.active .tab-close:hover { color: #fff; }
 .user {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 .lang {
   cursor: pointer;

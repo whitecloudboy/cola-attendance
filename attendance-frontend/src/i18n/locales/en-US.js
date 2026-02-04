@@ -160,6 +160,9 @@ export default {
   },
   login: {
     title: 'Attendance & Scheduling - Login',
+    slogan: 'Smart Attendance · Intelligent Scheduling',
+    sub: 'AI-powered attendance and scheduling system',
+    formDesc: 'Welcome back, please sign in',
     usernamePlaceholder: 'Username',
     passwordPlaceholder: 'Password',
     submit: 'Login',
