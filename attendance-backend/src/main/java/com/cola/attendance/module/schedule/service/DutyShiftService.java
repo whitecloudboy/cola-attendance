@@ -14,5 +14,8 @@ public interface DutyShiftService extends IService<DutyShiftEntity> {
     /** 按部门与颜色查询班次，供规则引擎交接班等使用 */
     List<DutyShiftEntity> listByDeptIdAndColor(Long deptId, String color);
 
+    /** 按部门与班次组号查询班次，供交接班按分组号匹配下一班 */
+    List<DutyShiftEntity> listByDeptIdAndGroupNo(Long deptId, String groupNo);
+
     Page<DutyShiftDTO> pageDto(Page<DutyShiftEntity> page, String name, Long deptId);
 }

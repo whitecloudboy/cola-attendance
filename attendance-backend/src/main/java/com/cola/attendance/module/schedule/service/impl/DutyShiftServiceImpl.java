@@ -40,6 +40,15 @@ public class DutyShiftServiceImpl extends ServiceImpl<DutyShiftDao, DutyShiftEnt
     }
 
     @Override
+    public List<DutyShiftEntity> listByDeptIdAndGroupNo(Long deptId, String groupNo) {
+        if (groupNo == null || groupNo.isBlank()) return List.of();
+        LambdaQueryWrapper<DutyShiftEntity> q = new LambdaQueryWrapper<>();
+        q.eq(DutyShiftEntity::getDeptId, deptId).eq(DutyShiftEntity::getGroupNo, groupNo.trim());
+        q.orderByAsc(DutyShiftEntity::getSort).orderByAsc(DutyShiftEntity::getId);
+        return list(q);
+    }
+
+    @Override
     public Page<DutyShiftDTO> pageDto(Page<DutyShiftEntity> page, String name, Long deptId) {
         LambdaQueryWrapper<DutyShiftEntity> q = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(name)) q.like(DutyShiftEntity::getName, name);

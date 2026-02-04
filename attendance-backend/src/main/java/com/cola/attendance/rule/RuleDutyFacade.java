@@ -32,10 +32,17 @@ public class RuleDutyFacade {
         return toRuleShift(shift);
     }
 
-    /** 按部门 + 颜色查同组班次列表 */
+    /** 按部门 + 颜色查同组班次列表（兼容未设 groupNo 时按颜色匹配） */
     public List<RuleShiftDTO> getListByDeptIdAndColor(Long deptId, String banColor) {
         if (deptId == null || banColor == null) return Collections.emptyList();
         List<DutyShiftEntity> list = dutyShiftService.listByDeptIdAndColor(deptId, banColor);
+        return list.stream().map(this::toRuleShift).collect(Collectors.toList());
+    }
+
+    /** 按部门 + 班次组号查同组班次列表，用于交接班按分组号匹配下一班 */
+    public List<RuleShiftDTO> getListByDeptIdAndGroupNo(Long deptId, String groupNo) {
+        if (deptId == null || groupNo == null || groupNo.isBlank()) return Collections.emptyList();
+        List<DutyShiftEntity> list = dutyShiftService.listByDeptIdAndGroupNo(deptId, groupNo.trim());
         return list.stream().map(this::toRuleShift).collect(Collectors.toList());
     }
 
@@ -46,6 +53,7 @@ public class RuleDutyFacade {
         dto.setEndTime(e.getEndTime());
         dto.setBanColor(e.getColor());
         dto.setDeptId(e.getDeptId());
+        dto.setGroupNo(e.getGroupNo());
         return dto;
     }
 }

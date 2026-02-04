@@ -15,4 +15,6 @@ public class RuleShiftDTO {
     private LocalTime endTime;
     private String banColor;
     private Long deptId;
+    /** 班次组号，用于交接班匹配同一组内的下一班 */
+    private String groupNo;
 }

@@ -212,17 +212,31 @@ public class DslFunctionHelper {
         }
     }
 
+    /**
+     * 获取当前班次的“下一班”列表，用于交接班判断。
+     * 优先按班次分组号（groupNo）同组 + 结束时间与下一班开始时间衔接；未设 groupNo 时按部门+颜色+时间衔接（兼容旧逻辑）。
+     */
     private List<RuleShiftDTO> getAfterBans(RuleShiftDTO ban) {
         if (ban == null || dutyBanService == null) return Collections.emptyList();
-        List<RuleShiftDTO> bans = dutyBanService.getListByDeptIdAndColor(ban.getDeptId(), ban.getBanColor());
+        String groupNo = ban.getGroupNo();
+        boolean useGroupNo = groupNo != null && !groupNo.isBlank();
+
+        List<RuleShiftDTO> bans = useGroupNo
+            ? dutyBanService.getListByDeptIdAndGroupNo(ban.getDeptId(), groupNo)
+            : dutyBanService.getListByDeptIdAndColor(ban.getDeptId(), ban.getBanColor());
         if (bans.isEmpty()) return bans;
-        bans = bans.stream().filter(d -> ban.getEndTime() != null && ban.getEndTime().equals(d.getBeginTime())).collect(Collectors.toList());
+        bans = bans.stream()
+            .filter(d -> ban.getEndTime() != null && ban.getEndTime().equals(d.getBeginTime()))
+            .collect(Collectors.toList());
+
         if (bans.isEmpty() && sysDeptService != null) {
             SysDeptDTO deptDTO = sysDeptService.getById(ban.getDeptId()) != null ? toDeptDto(sysDeptService.getById(ban.getDeptId())) : null;
             if (deptDTO != null && deptDTO.getParentId() != null) {
                 List<Long> deptIds = sysDeptService.getSubDeptIdList(deptDTO.getParentId());
                 for (Long deptId : deptIds) {
-                    List<RuleShiftDTO> banList = dutyBanService.getListByDeptIdAndColor(deptId, ban.getBanColor());
+                    List<RuleShiftDTO> banList = useGroupNo
+                        ? dutyBanService.getListByDeptIdAndGroupNo(deptId, groupNo)
+                        : dutyBanService.getListByDeptIdAndColor(deptId, ban.getBanColor());
                     for (RuleShiftDTO d : banList) {
                         if (ban.getEndTime() != null && ban.getEndTime().equals(d.getBeginTime())) bans.add(d);
                     }
